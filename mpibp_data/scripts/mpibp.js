@@ -5,6 +5,10 @@ Math.Clamp = function ( num , min , max ) {
     return Math.min(Math.max(num,min),max);
 };
 
+Math.ModNearestInt = function( a , b) {
+    return a - b * Math.round(a / b);
+}
+
 // VECTOR 2 //
 function Vector2( x , y ) {
     this.x = x;
@@ -241,12 +245,10 @@ IntersectionRects = function ( rect1 , rect2 ) {
         if( rect1.height+rect1.y>rect2.y ){s+="1";} else{ return s+="0"; }
         console.log( s );
         */
-        ctx.fillStyle = 'rgb(255,255,255)';
-        ctx.fillRect( rect1.x , rect1.y , rect1.width , rect1.height );
+        //ctx.fillStyle = 'rgb(255,255,255)'; ctx.fillRect( rect1.x , rect1.y , rect1.width , rect1.height );
         return true; }
     else {
-        ctx.fillStyle = 'rgb(0,0,0)';
-        ctx.fillRect( rect1.x , rect1.y , rect1.width , rect1.height );
+        //ctx.fillStyle = 'rgb(0,0,0)'; ctx.fillRect( rect1.x , rect1.y , rect1.width , rect1.height );
         return false; }
 };
 
@@ -303,6 +305,9 @@ images.player.src = 'mpibp_data/images/player-0.gif';
 images.player.rotation = 0;
 images.player.rotationTarget = 0;
 //
+images.playerSelected = new Image();
+images.playerSelected.src = 'mpibp_data/images/player-0_selected.gif';
+//
 images.playerSteps = new Image();
 images.playerSteps.src = 'mpibp_data/images/player-steps.gif';
 images.playerSteps.rotation = 0;
@@ -353,6 +358,14 @@ images.wall1Gap = new Image();
 images.wall1Gap.src = 'mpibp_data/images/wall-1-gap.gif';
 images.wall1Gap.isCollider = false;
 //
+images.wall1End = new Image();
+images.wall1End.src = 'mpibp_data/images/wall-1-end.gif';
+images.wall1End.isCollider = false;
+//
+images.wall1End2 = new Image();
+images.wall1End2.src = 'mpibp_data/images/wall-1-end2.gif';
+images.wall1End2.isCollider = false;
+//
 images.pathI = new Image();
 images.pathI.src = 'mpibp_data/images/path-I.png';
 images.pathI.isCollider = false;
@@ -386,11 +399,11 @@ images.shadowRadial.src = 'mpibp_data/images/shadow-radial-1.png';
 
 var levels = [
     new Level( [
-        new Field(0,1,180,images.wall1L),new Field(1,1,180,images.wall1I),new Field(2,1,180,images.wall1I),new Field(3,1,180,images.wall1I),new Field(4,1,270,images.wall1L),
-        new Field(0,2,90,images.wall1I),new Field(1,2,0,images.pathEnd),new Field(2,2,0,images.pathI),new Field(3,2,180,images.pathEnd),new Field(4,2,270,images.wall1I),
-        new Field(0,3,90,images.wall1L),new Field(1,3,0,images.wall1I),new Field(2,3,0,images.wall1I),new Field(3,3,0,images.wall1I),new Field(4,3,0,images.wall1L)
+        new Field(0, 1, 180, images.wall1End), new Field(1, 1, 180, images.wall1I), new Field(2, 1, 180, images.wall1I), new Field(3, 1, 180, images.wall1I), new Field(4, 1, 270, images.wall1L),
+        new Field(1,2,0,images.pathEnd),new Field(2,2,0,images.pathI),new Field(3,2,180,images.pathEnd),new Field(4,2,270,images.wall1I),
+        new Field(0, 3, 180, images.wall1End2), new Field(1, 3, 0, images.wall1I), new Field(2, 3, 0, images.wall1I), new Field(3, 3, 0, images.wall1I), new Field(4, 3, 0, images.wall1L)
         ],[
-            new Sprite(images.tree1,160,40,0,new Vector2(0.5,0.5)),new Sprite(images.tree1,270,22,44,new Vector2(0.5,0.5)),new Sprite(images.tree1,170,332,344,new Vector2(0.45,0.45)),new Sprite(images.tree1,264,352,310,new Vector2(0.55,0.55)),new Sprite(images.tree1,370,292,344,new Vector2(0.7,0.7)),new Sprite(images.tree1,370,92,11,new Vector2(0.7,0.7))
+            new Sprite(images.tree1, 160, 40, 0, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 270, 22, 44, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 170, 332, 344, new Vector2(0.45, 0.45)), new Sprite(images.tree1, 264, 352, 310, new Vector2(0.55, 0.55)), new Sprite(images.tree1, 370, 292, 344, new Vector2(0.7, 0.7)), new Sprite(images.tree1, 370, 92, 11, new Vector2(0.7, 0.7))
         ], new Vector2(1,2) ,[ new PlayerDestination(3,2) ] ),
     new Level( [
         new Field(0,0,180,images.wall1L),new Field(1,0,180,images.wall1I),new Field(2,0,180,images.wall1I),new Field(3,0,270,images.wall1L),
@@ -400,7 +413,7 @@ var levels = [
         new Field(1,4,90,images.wall1I),new Field(2,4,180,images.pathL),new Field(3,4,180,images.pathEnd),new Field(4,4,270,images.wall1I),
         new Field(1,5,90,images.wall1L),new Field(2,5,0,images.wall1I),new Field(3,5,0,images.wall1I),new Field(4,5,0,images.wall1L)
     ],[
-        
+        new Sprite(images.entrance, 96, 32, 0, new Vector2(1, 1))
     ], new Vector2(1,1) ,[ new PlayerDestination(3,4) ] ),
     new Level( [
         new Field(0,0,180,images.wall1L),new Field(1,0,180,images.wall1I)
@@ -487,13 +500,17 @@ var Update = function () {
         if (player.transform.position.y > 320) { player.transform.position.y = 320; player.direction = direction.none; }
     }
     
+    //rotate player:
+    {
+        var playerRotationStepThisFrame = Math.ModNearestInt(images.player.rotationTarget - images.player.rotation, 360.0) / 6;
+        if (player.isSelected) { playerRotationStepThisFrame /= 4; }
+        images.player.rotation += playerRotationStepThisFrame;
+    }
+
     //draw player:
-    images.player.rotation += (images.player.rotationTarget-images.player.rotation)/6;
-    images.shadowRadial.Draw( player.transform.position.x , player.transform.position.y );
-    images.player.DrawRotated( player.transform.position.x , player.transform.position.y , images.player.rotation );
-    
-    //draw foreground:
-    images.uiBarBottom.Draw( 0 , 352 );
+    images.shadowRadial.Draw(player.transform.position.x, player.transform.position.y);
+    if (player.isSelected) { images.playerSelected.DrawRotated(player.transform.position.x, player.transform.position.y, images.player.rotation); }
+    else { images.player.DrawRotated(player.transform.position.x, player.transform.position.y, images.player.rotation); }
     
     //draw coursor:
     if( mouse.over===true ) {
@@ -502,10 +519,9 @@ var Update = function () {
     }
     
     //evaluate if exit was reched:
-    if( Level().isLevelCompleted===false ) {
-        for (var i = 0 ; i < Level().destinations.length ; i++) {
-            //console.log( Level() );
-            if( ContainsPoint( new Rect( Level().destinations[i].transform.x , Level().destinations[i].transform.y , 64 , 64 ) , player.GetCenter() ) ) {
+    if (Level().isLevelCompleted === false) {
+        for (var i = 0; i < Level().destinations.length; i++) {
+            if( ContainsPoint(new Rect(Level().destinations[i].transform.position.x, Level().destinations[i].transform.position.y, 64, 64), player.GetCenter()) ){
                 Level().isLevelCompleted = true;
                 setTimeout( function(){
                     if( levelIndex<levels.length-1 ) {
@@ -523,22 +539,29 @@ var Update = function () {
     if( mouse.down===true && player.isSelected ){
         var dirRaw = mouse.GetPositionVector().Subtract( player.GetCenter() );
         //determine move direction:
-        var dir = new Vector2(0,0);
-        if (dirRaw.x >= 0) { dir.x = 1; images.playerSteps.rotation = 0; }
-        else { dir.x = -1; images.playerSteps.rotation = 180; }
-        if (Math.abs(dirRaw.y) > Math.abs(dirRaw.x)) {
-            dir.x = 0;
-            if (dirRaw.y >= 0) { dir.y = 1; images.playerSteps.rotation = 90; }
-            else { dir = dir.y = -1; images.playerSteps.rotation = 270; }
+        var dir = new Vector2(0, 0);
+        if (Math.abs(dirRaw.x) >= Math.abs(dirRaw.y)) {
+            if (dirRaw.x >= 0) { dir.x = 1; images.playerSteps.rotation = 0; images.player.rotationTarget = 270;}
+            else { dir.x = -1; images.playerSteps.rotation = 180; images.player.rotationTarget = 90; }
+        }
+        else {
+            if (dirRaw.y >= 0) { dir.y = 1; images.playerSteps.rotation = 90; images.player.rotationTarget = 0; }
+            else { dir.y = -1; images.playerSteps.rotation = 270; images.player.rotationTarget = 180; }
         }
         //draw steps:
-        for( var i = 1 ; i < 4 ; i++ ) {
+        for( var i = 1 ; i < 6 ; i++ ) {
             if (Level().CollisionTest(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64)) ) {
                 break;
             }
-            else { images.playerSteps.DrawRotated(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, images.playerSteps.rotation); }
+            else {
+                images.playerSteps.DrawRotated(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, images.playerSteps.rotation);
+            }
         }
     }
+
+
+    //draw UI:
+    images.uiBarBottom.Draw(0, 352);
 };
 
 // ON MOUSE DOWN /////////////////////////////////////////////
