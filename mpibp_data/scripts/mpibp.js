@@ -514,10 +514,14 @@ var levels = [
 
     // x //
     new Level([
-        new Field(1, 0, 180, images.wall1I), new Field(1, 0, 180, images.wall1I)
+        new Field(2, 2, 180, images.wall1L2),new Field(2, 5, 270, images.wall1I),new Field(4, 2, 0, images.wall1I),new Field(3, 2, 0, images.wall1I),
+        new Field(2, 3, 270, images.wall1Gap),
+        new Field(2, 4, 180, images.wall1T),new Field(3, 4, 0, images.wall1Gap),new Field(4, 4, 0, images.wall1I),
+
+        new Field(1, 4, 0, images.woodenBarrel1, false,true),new Field(0, 2, 0, images.woodenBarrel1, false,true),new Field(2, 0, 0, images.woodenBarrel1, false,true),new Field(3, 1, 0, images.woodenBarrel1, false,true),new Field(4, 0, 0, images.woodenBarrel1, false,true),new Field(4, 1, 0, images.woodenBox1, true),new Field(3, 0, 0, images.woodenBox1, true),new Field(2, 1, 0, images.woodenBox1, true)
 ],[
     
-], new Vector2(1, 11), [new PlayerDestination(3, 14)]),
+], new Vector2(1, 5), [new PlayerDestination(3, 5)])
 
 ];
 
@@ -532,7 +536,7 @@ var levelIndex = 0;
 //
 var player = new Player( -1 , -1 );
 //
-var Level = function(){ return levels[levelIndex]; };
+var CurrentLevel = function(){ return levels[levelIndex]; };
 //
 var selectedField = null;
 
@@ -549,8 +553,8 @@ window.addEventListener('load', function(){ OnLoad(); } , false );
 
 var OnLoad = function() {
     setInterval(Update, 1000 / 60);
-    levelIndex = 0;
-    Level().Initialize();
+    levelIndex = 3;
+    CurrentLevel().Initialize();
 };
 
 // UPDATE /////////////////////////////////////////////
@@ -559,11 +563,22 @@ var Update = function () {
     
     //draw background:
     images.background.Draw( 0 , 0 );
-    
+
+    //draw exit:
+    for( var i = 0 ; i < CurrentLevel().destinations.length ; i++ ) {
+        var d = CurrentLevel().destinations[i];
+        if( images.stairs.IsMouseOver(d.transform.position.x,d.transform.position.y)===true ){
+            images.stairs_onmouseover.Draw( d.transform.position.x , d.transform.position.y );
+        }
+        else {
+            images.stairs.Draw( d.transform.position.x , d.transform.position.y );
+        }
+    }
+
     //DRAW MAP'S FIELDS:
     {
-        for (var i = 0; i < Level().world.length ; i++) {
-            var f = Level().world[i];
+        for (var i = 0; i < CurrentLevel().world.length ; i++) {
+            var f = CurrentLevel().world[i];
             if (f instanceof Field) {
                 //draw:
                 if (f.image instanceof Image) { f.Draw(); }
@@ -573,7 +588,7 @@ var Update = function () {
                     //translations:
                     if (f.direction !== Direction.none) {
                         //test world collisions:
-                        if (IntersectionRects(f.GetRect(), player.GetRect()) || Level().IsRectOverWorld(f.GetRect(), f)) {
+                        if (IntersectionRects(f.GetRect(), player.GetRect()) || CurrentLevel().IsRectOverWorld(f.GetRect(), f)) {
                             if (f.transform.position.x % 64 !== 0) { f.transform.position.x -= 4 * f.DirectionVector().x; }
                             if (f.transform.position.y % 64 !== 0) { f.transform.position.y -= 4 * f.DirectionVector().y; }
                             f.direction = Direction.none;
@@ -605,21 +620,10 @@ var Update = function () {
             else { console.log("ERROR: map element is not Field") }
         };
     }
-    
-    //draw exit:
-    for( var i = 0 ; i < Level().destinations.length ; i++ ) {
-        var d = Level().destinations[i];
-        if( images.stairs.IsMouseOver(d.transform.position.x,d.transform.position.y)===true ){
-            images.stairs_onmouseover.Draw( d.transform.position.x , d.transform.position.y );
-        }
-        else {
-            images.stairs.Draw( d.transform.position.x , d.transform.position.y );
-        }
-    }
-    
+
     //draw sprites:
-    for( var i = 0 ; i < Level().sprites.length ; i++ ) {
-        Level().sprites[i].Draw();
+    for( var i = 0 ; i < CurrentLevel().sprites.length ; i++ ) {
+        CurrentLevel().sprites[i].Draw();
     }
     
     //visualise player moving direction:
@@ -638,7 +642,7 @@ var Update = function () {
             }
             //draw steps:
             for (var i = 1 ; i < 6 ; i++) {
-                if (Level().IsRectOverWorld(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64))) {
+                if (CurrentLevel().IsRectOverWorld(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64))) {
                     /* world collision detected */
                     images.playerStepsStop.DrawRotated(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, images.playerSteps.rotation);
                     break;
@@ -648,7 +652,7 @@ var Update = function () {
                     images.playerStepsStop.DrawRotated(player.transform.position.x + 64 * i * dir.x - 12 * dir.x, player.transform.position.y + 64 * i * dir.y - 12 * dir.y, images.playerSteps.rotation);
                     break;
                 }
-                else if ( Level().IsRectOverDestination(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64)) ) {
+                else if ( CurrentLevel().IsRectOverDestination(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64)) ) {
                     /* exit detected */
                     images.playerStepsStop.DrawRotated(player.transform.position.x + 64 * i * dir.x + 52 * dir.x, player.transform.position.y + 64 * i * dir.y + 52 * dir.y, images.playerSteps.rotation);
                     break;
@@ -678,7 +682,7 @@ var Update = function () {
             //draw steps:
             for (var i = 1 ; i < 6 ; i++) {
                 fRect = selectedField.GetRect();
-                if (IntersectionRects(new Rect(fRect.x + 64 * i * dir.x, fRect.y + 64 * i * dir.y, 64, 64), player.GetRect()) || Level().IsRectOverWorld(new Rect(selectedField.transform.position.x + 64 * i * dir.x, selectedField.transform.position.y + 64 * i * dir.y, 64, 64))) {
+                if (IntersectionRects(new Rect(fRect.x + 64 * i * dir.x, fRect.y + 64 * i * dir.y, 64, 64), player.GetRect()) || CurrentLevel().IsRectOverWorld(new Rect(selectedField.transform.position.x + 64 * i * dir.x, selectedField.transform.position.y + 64 * i * dir.y, 64, 64))) {
                     /* world collision detected */
                     images.playerStepsStop.DrawRotated(selectedField.transform.position.x + 64 * i * dir.x - 8 * dir.x, selectedField.transform.position.y + 64 * i * dir.y - 8 * dir.y, images.objectSteps.rotation);
                     break;
@@ -699,7 +703,7 @@ var Update = function () {
     //player move translations:
     if (player.direction !== Direction.none) {
         //test world collisions:
-        if( Level().IsRectOverWorld( player.GetRect() ) ){
+        if( CurrentLevel().IsRectOverWorld( player.GetRect() ) ){
             if (player.transform.position.x % 64 !== 0) { player.transform.position.x -= 4 * player.DirectionVector().x; }
             if (player.transform.position.y % 64 !== 0) { player.transform.position.y -= 4 * player.DirectionVector().y; }
             player.direction = Direction.none;
@@ -734,15 +738,15 @@ var Update = function () {
     }
     
     //evaluate if exit was reched:
-    if (Level().isLevelCompleted === false) {
-        for (var i = 0; i < Level().destinations.length; i++) {
-            if (IntersectionRectPoint(new Rect(Level().destinations[i].transform.position.x, Level().destinations[i].transform.position.y, 64, 64), player.GetCenter())) {
-                Level().isLevelCompleted = true;
+    if (CurrentLevel().isLevelCompleted === false) {
+        for (var i = 0; i < CurrentLevel().destinations.length; i++) {
+            if (IntersectionRectPoint(new Rect(CurrentLevel().destinations[i].transform.position.x, CurrentLevel().destinations[i].transform.position.y, 64, 64), player.GetCenter())) {
+                CurrentLevel().isLevelCompleted = true;
                 player.direction = Direction.none;
                 setTimeout(function () {
                     if (levelIndex < levels.length - 1) {
                         levelIndex++;
-                        Level().Initialize();
+                        CurrentLevel().Initialize();
                     }
                 }, 300);
                 break;
@@ -759,18 +763,18 @@ var Update = function () {
 var OnMouseDown = function ( e ) {
     mouse.down = true;
     //test player inveractions:
-    if (Level().isLevelCompleted === false && player.direction === Direction.none && player.IsMouseOver()) {
+    if (CurrentLevel().isLevelCompleted === false && player.direction === Direction.none && player.IsMouseOver()) {
         player.isSelected = true;
     }
     //
-    for (var i = 0; i < Level().world.length; i++) {
-        var f = Level().world[i];
+    for (var i = 0; i < CurrentLevel().world.length; i++) {
+        var f = CurrentLevel().world[i];
         if ((f.isMovable || f.isDestructible) && f.IsMouseOver() && f.InPlayersReach() && player.direction === Direction.none) {
             if (f.isDestructible) {
                 f.image = images.destroyedWoodenStuff1;
                 f.isDestructible = false;
                 f.isMovable = false;
-                //Level().world.splice(i, 1);
+                //CurrentLevel().world.splice(i, 1);
             }
             else { selectedField = f; }
         }
