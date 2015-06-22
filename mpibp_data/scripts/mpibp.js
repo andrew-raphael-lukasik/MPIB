@@ -99,6 +99,7 @@ function Rect ( x , y , w , h ) {
     this.y = y;
     this.width = w;
     this.height = h;
+    this.IsMouseOver = function () { return IntersectionRectPoint( this, new Vector2(mouse.x, mouse.y) ); }
 }
 
 // CIRCLE //
@@ -120,7 +121,8 @@ function Transform ( position , rotation ) {
 }
 
 // LEVEL //
-function Level(world, sprites, playerStart, destinations) {
+function Level(name,world, sprites, playerStart, destinations) {
+    this.name = name;
     this.world = world;
     this.sprites = sprites;
     this.playerStartPosition = playerStart;
@@ -223,9 +225,16 @@ function Sprite ( image , x , y , rotation , scale ) {
         this.image.DrawResizedRotated( x-this.image.width*this.transform.scale.x/2 , y-this.image.height*this.transform.scale.y/2 , this.image.width*this.transform.scale.x , this.image.height*this.transform.scale.y , rotation );
     };
     if( rotation instanceof Number===false ){ rotation = 0; }
-    this.transform = new Transform(new Vector2(x,y),rotation);
+    this.transform = new Transform(new Vector2(x, y), rotation);
+    //
     if( scale instanceof Vector2 === false ){ scale = new Vector2(1,1); }
     this.transform.scale = scale;
+    //
+    this.IsMouseOver = function () {
+        var computedWidth = this.image.width * this.transform.scale.x;
+        var computedHeight = this.image.height * this.transform.scale.y;
+        return IsMouseOver(this.transform.position.x - computedWidth/2, this.transform.position.y - computedHeight / 2, computedWidth, computedHeight);
+    }
 }
 
 // EXTENSION METHODS /////////////////////////////////////////////
@@ -339,6 +348,13 @@ images.playerStepsStop.rotation = 0;
 images.objectSteps = new Image();
 images.objectSteps.src = 'mpibp_data/images/object-steps.gif';
 images.objectSteps.rotation = 0;
+//
+images.buttonRestart = new Image();
+images.buttonRestart.src = 'mpibp_data/images/button-restart.gif';
+images.buttonRestart.rect = new Rect(128, 385, 64, 32);
+//
+images.buttonRestartMouseOver = new Image();
+images.buttonRestartMouseOver.src = 'mpibp_data/images/button-restart_mouseover.gif';
 //
 images.stairs = new Image();
 images.stairs.src = 'mpibp_data/images/stairs.gif';
@@ -471,12 +487,13 @@ images.blockedPathWood1 = new Image();
 images.blockedPathWood1.src = 'mpibp_data/images/blocked-path-wood-1.gif';
 images.blockedPathWood1.isCollider = true;
 
+
+
 // MAPS ///////////////////////////////////////////////
 
 var levels = [
 
-    // Just swipe right to complete //
-    new Level([
+    new Level("Just swipe right to complete.", [
         new Field(0, 1, 180, images.wall1L), new Field(1, 1, 180, images.wall1I), new Field(2, 1, 180, images.wall1I), new Field(3, 1, 180, images.wall1I), new Field(4, 1, 270, images.wall1L),
         new Field(0, 2, 90, images.wall1Gap), new Field(0, 2, 0, images.doorInaccessible), new Field(1, 2, 0, images.pathEnd), new Field(2, 2, 0, images.pathI), new Field(3, 2, 180, images.pathEnd), new Field(4, 2, 270, images.wall1I),
         new Field(0, 3, 90, images.wall1L), new Field(1, 3, 0, images.wall1I), new Field(2, 3, 0, images.wall1I), new Field(3, 3, 0, images.wall1I), new Field(4, 3, 0, images.wall1L)
@@ -484,8 +501,7 @@ var levels = [
             new Sprite(images.tree1, 160, 40, 0, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 270, 22, 44, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 170, 332, 344, new Vector2(0.45, 0.45)), new Sprite(images.tree1, 264, 352, 310, new Vector2(0.55, 0.55)), new Sprite(images.tree1, 370, 292, 344, new Vector2(0.7, 0.7)), new Sprite(images.tree1, 370, 92, 11, new Vector2(0.7, 0.7))
         ], new Vector2(1,2) ,[ new PlayerDestination(3,2) ] ),
 
-    // Go right. Clear obstacle. Go down, right to complete //
-    new Level([
+    new Level("Go right. Clear obstacle. Go down, right to complete.", [
         new Field(0,0,180,images.wall1L),new Field(1,0,180,images.wall1I),new Field(2,0,180,images.wall1I),new Field(3,0,270,images.wall1L),
         new Field(0,1,90,images.wall1I),new Field(1,1,0,images.pathEnd),new Field(2,1,0,images.pathL),new Field(3,1,270,images.wall1I),
         new Field(0,2,90,images.wall1L),new Field(1,2,270,images.wall1T),new Field(2,2,90,images.pathI),new Field(2,3,90,images.pathI),new Field(2,2,0,images.wall1Gap),new Field(3,2,0,images.wall1T2),
@@ -498,8 +514,7 @@ var levels = [
         new Sprite(images.entrance, 96, 32, 0, new Vector2(1, 1))
     ], new Vector2(1, 1), [new PlayerDestination(3, 4)]),
 
-    // Use movable object to complete //
-    new Level([
+    new Level("Use movable object to complete.", [
         new Field(0, 0, 180, images.wall1L), new Field(1, 0, 180, images.wall1I), new Field(2, 0, 180, images.wall1I), new Field(3, 0, 180, images.wall1I), new Field(4, 0, 270, images.wall1L),
         new Field(0, 1, 90, images.wall1I), new Field(1, 1, 0, images.pathEnd), new Field(2, 1, 0, images.pathI), new Field(3, 1, 0, images.pathL), new Field(4, 1, 270, images.wall1I),
         new Field(0, 2, 90, images.wall1L),new Field(3,2,90,images.pathI), new Field(1, 2, 0, images.wall1I), new Field(2, 2, 270, images.wall1L2), new Field(4, 2, 270, images.wall1I),
@@ -512,16 +527,24 @@ var levels = [
         
     ], new Vector2(4, 4), [new PlayerDestination(1, 1)] ),
 
-    // x //
-    new Level([
-        new Field(2, 2, 180, images.wall1L2),new Field(2, 5, 270, images.wall1I),new Field(4, 2, 0, images.wall1I),new Field(3, 2, 0, images.wall1I),
-        new Field(2, 3, 270, images.wall1Gap),
-        new Field(2, 4, 180, images.wall1T),new Field(3, 4, 0, images.wall1Gap),new Field(4, 4, 0, images.wall1I),
+    new Level("Find a way in.", [
+        new Field(2, 2, 180, images.wall1L2),new Field(4, 2, 0, images.wall1I),new Field(3, 2, 0, images.wall1I),
+        new Field(1, 3, 0, images.pathEnd), new Field(2, 3, 0, images.pathI), new Field(3, 3, 0, images.pathL), new Field(2, 3, 270, images.wall1Gap),
+        new Field(3, 4, 270, images.pathEnd), new Field(2, 4, 180, images.wall1T), new Field(3, 4, 0, images.wall1Gap), new Field(4, 4, 0, images.wall1I),
+        new Field(2, 5, 270, images.wall1I),
 
-        new Field(1, 4, 0, images.woodenBarrel1, false,true),new Field(0, 2, 0, images.woodenBarrel1, false,true),new Field(2, 0, 0, images.woodenBarrel1, false,true),new Field(3, 1, 0, images.woodenBarrel1, false,true),new Field(4, 0, 0, images.woodenBarrel1, false,true),new Field(4, 1, 0, images.woodenBox1, true),new Field(3, 0, 0, images.woodenBox1, true),new Field(2, 1, 0, images.woodenBox1, true)
+        new Field(1, 4, 0, images.woodenBarrel1, false, true), new Field(0, 2, 0, images.woodenBarrel1, false, true), new Field(2, 0, 0, images.woodenBarrel1, false, true), new Field(3, 1, 0, images.woodenBarrel1, false, true), new Field(4, 0, 0, images.woodenBarrel1, false, true), new Field(4, 1, 0, images.woodenBox1, true), new Field(3, 0, 0, images.woodenBox1, true), new Field(2, 1, 0, images.woodenBox1, true), new Field(2, 3, 90, images.blockedPathWood1, false, true), new Field(3, 4, 0, images.blockedPathWood1, false, true)
 ],[
     
-], new Vector2(1, 5), [new PlayerDestination(3, 5)])
+], new Vector2(1, 5), [new PlayerDestination(3, 5)]),
+    
+    new Level("Find a way out.", [
+        new Field(2, 2, 180, images.wall1I),
+
+        //new Field(1, 4, 0, images.woodenBarrel1, false, true), new Field(0, 2, 0, images.woodenBarrel1, false, true), new Field(2, 0, 0, images.woodenBarrel1, false, true), new Field(3, 1, 0, images.woodenBarrel1, false, true), new Field(4, 0, 0, images.woodenBarrel1, false, true), new Field(4, 1, 0, images.woodenBox1, true), new Field(3, 0, 0, images.woodenBox1, true), new Field(2, 1, 0, images.woodenBox1, true), new Field(2, 3, 90, images.blockedPathWood1, false, true), new Field(3, 4, 0, images.blockedPathWood1, false, true)
+    ], [
+
+    ], new Vector2(1, 5), [new PlayerDestination(3, 5)])
 
 ];
 
@@ -539,6 +562,8 @@ var player = new Player( -1 , -1 );
 var CurrentLevel = function(){ return levels[levelIndex]; };
 //
 var selectedField = null;
+//
+
 
 // EVENTY /////////////////////////////////////////////
 
@@ -756,17 +781,22 @@ var Update = function () {
 
     //draw UI:
     images.uiBarBottom.Draw(0, 352);
+
+    //draw restart button:
+    if (images.buttonRestart.rect.IsMouseOver()) { images.buttonRestartMouseOver.Draw(images.buttonRestart.rect.x, images.buttonRestart.rect.y); }
+    else { images.buttonRestart.Draw(images.buttonRestart.rect.x, images.buttonRestart.rect.y); }
+
 };
 
 // ON MOUSE DOWN /////////////////////////////////////////////
 
 var OnMouseDown = function ( e ) {
     mouse.down = true;
-    //test player inveractions:
+    //test player selection:
     if (CurrentLevel().isLevelCompleted === false && player.direction === Direction.none && player.IsMouseOver()) {
         player.isSelected = true;
     }
-    //
+    //test player inveractions:
     for (var i = 0; i < CurrentLevel().world.length; i++) {
         var f = CurrentLevel().world[i];
         if ((f.isMovable || f.isDestructible) && f.IsMouseOver() && f.InPlayersReach() && player.direction === Direction.none) {
@@ -774,10 +804,13 @@ var OnMouseDown = function ( e ) {
                 f.image = images.destroyedWoodenStuff1;
                 f.isDestructible = false;
                 f.isMovable = false;
-                //CurrentLevel().world.splice(i, 1);
             }
             else { selectedField = f; }
         }
+    }
+    // test restart button:
+    if ( images.buttonRestart.rect.IsMouseOver() ) {
+        console.log("restart");
     }
 };
 
@@ -824,20 +857,12 @@ var OnMouseUp = function (e) {
         var dir = selectedField.DirectionToCoursor();
         if (dir.Magnitude() > 22) {
             if (Math.abs(dir.x) > Math.abs(dir.y)) {
-                if (dir.x > 0) {
-                    selectedField.direction = Direction.right;
-                }
-                else {
-                    selectedField.direction = Direction.left;
-                }
+                if (dir.x > 0) { selectedField.direction = Direction.right; }
+                else { selectedField.direction = Direction.left; }
             }
             else {
-                if (dir.y > 0) {
-                    selectedField.direction = Direction.down;
-                }
-                else {
-                    selectedField.direction = Direction.up;
-                }
+                if (dir.y > 0) { selectedField.direction = Direction.down; }
+                else { selectedField.direction = Direction.up; }
             }
             selectedField = null;
         }
