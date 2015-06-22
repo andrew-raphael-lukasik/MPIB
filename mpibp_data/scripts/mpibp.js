@@ -495,7 +495,7 @@ var levels = [
 
     new Level("Just swipe right to complete.", [
         new Field(0, 1, 180, images.wall1L), new Field(1, 1, 180, images.wall1I), new Field(2, 1, 180, images.wall1I), new Field(3, 1, 180, images.wall1I), new Field(4, 1, 270, images.wall1L),
-        new Field(0, 2, 90, images.wall1Gap), new Field(0, 2, 0, images.doorInaccessible), new Field(1, 2, 0, images.pathEnd), new Field(2, 2, 0, images.pathI), new Field(3, 2, 180, images.pathEnd), new Field(4, 2, 270, images.wall1I),
+        new Field(0, 2, 90, images.wall1Gap), new Field(0, 2, 0, images.doorInaccessible), new Field(1, 2, 0, images.pathEnd), new Field(2, 2, 180, images.pathEnd), new Field(4, 2, 270, images.wall1I),
         new Field(0, 3, 90, images.wall1L), new Field(1, 3, 0, images.wall1I), new Field(2, 3, 0, images.wall1I), new Field(3, 3, 0, images.wall1I), new Field(4, 3, 0, images.wall1L)
         ],[
             new Sprite(images.tree1, 160, 40, 0, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 270, 22, 44, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 170, 332, 344, new Vector2(0.45, 0.45)), new Sprite(images.tree1, 264, 352, 310, new Vector2(0.55, 0.55)), new Sprite(images.tree1, 370, 292, 344, new Vector2(0.7, 0.7)), new Sprite(images.tree1, 370, 92, 11, new Vector2(0.7, 0.7))
@@ -506,7 +506,7 @@ var levels = [
         new Field(0,1,90,images.wall1I),new Field(1,1,0,images.pathEnd),new Field(2,1,0,images.pathL),new Field(3,1,270,images.wall1I),
         new Field(0,2,90,images.wall1L),new Field(1,2,270,images.wall1T),new Field(2,2,90,images.pathI),new Field(2,3,90,images.pathI),new Field(2,2,0,images.wall1Gap),new Field(3,2,0,images.wall1T2),
         new Field(1,3,90,images.wall1I),new Field(3,3,90,images.wall1L2),new Field(4,3,270,images.wall1L),
-        new Field(1,4,90,images.wall1I),new Field(2,4,180,images.pathL),new Field(3,4,180,images.pathEnd),new Field(4,4,270,images.wall1I),
+        new Field(1,4,90,images.wall1I),new Field(2,4,270,images.pathEnd),new Field(4,4,270,images.wall1I),
         new Field(1, 5, 90, images.wall1L), new Field(2, 5, 0, images.wall1I), new Field(3, 5, 0, images.wall1I), new Field(4, 5, 0, images.wall1L),
 
         new Field(2, 2, 0, images.blockedPathWood1 ,false,true)
@@ -516,7 +516,7 @@ var levels = [
 
     new Level("Use movable object to complete.", [
         new Field(0, 0, 180, images.wall1L), new Field(1, 0, 180, images.wall1I), new Field(2, 0, 180, images.wall1I), new Field(3, 0, 180, images.wall1I), new Field(4, 0, 270, images.wall1L),
-        new Field(0, 1, 90, images.wall1I), new Field(1, 1, 0, images.pathEnd), new Field(2, 1, 0, images.pathI), new Field(3, 1, 0, images.pathL), new Field(4, 1, 270, images.wall1I),
+        new Field(0, 1, 90, images.wall1I), new Field(2, 1, 0, images.pathEnd), new Field(3, 1, 0, images.pathL), new Field(4, 1, 270, images.wall1I),
         new Field(0, 2, 90, images.wall1L),new Field(3,2,90,images.pathI), new Field(1, 2, 0, images.wall1I), new Field(2, 2, 270, images.wall1L2), new Field(4, 2, 270, images.wall1I),
         new Field(0, 3, 0, images.pathEnd), new Field(1, 3, 0, images.pathL), new Field(2, 3, 90, images.wall1I), new Field(3, 3, 90, images.pathI), new Field(4, 3, 270, images.wall1I),
         new Field(1, 4, 270, images.pathEnd),new Field(2, 4, 90, images.wall1End), new Field(3, 4, 180, images.pathT), new Field(4, 4, 0, images.pathI), new Field(4, 4, 90, images.wall1End2),
@@ -578,7 +578,7 @@ window.addEventListener('load', function(){ OnLoad(); } , false );
 
 var OnLoad = function() {
     setInterval(Update, 1000 / 60);
-    levelIndex = 3;
+    levelIndex = 0;
     CurrentLevel().Initialize();
 };
 
