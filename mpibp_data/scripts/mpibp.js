@@ -121,34 +121,80 @@ function Transform ( position , rotation ) {
 }
 
 // LEVEL //
-function Level(name,world, sprites, playerStart, destinations) {
+function Level(name, world, sprites, playerStart, exit) {
+    var initialArguments = {
+        _name: undefined,
+        _world: undefined,
+        _sprites: undefined,
+        _playerStart: undefined,
+        _exit: undefined
+    };
+    initialArguments._name = name;
+    initialArguments._world = [];
+    for (var i = 0; i < world.length; i++) { initialArguments._world.push(world[i].Copy()); }
+    initialArguments._sprites = [];
+    for (var i = 0; i < sprites.length; i++) { initialArguments._sprites.push(sprites[i].Copy()); }
+    initialArguments._exit = exit.Copy();
+    initialArguments._playerStart = playerStart.Copy();
+    //
     this.name = name;
+    //
     this.world = world;
+    //
     this.sprites = sprites;
+    //
     this.playerStartPosition = playerStart;
-    this.destinations = destinations;
+    //
+    this.exit = exit;
+    //
     this.isLevelCompleted = false;
-    this.Initialize = function(){
+    //
+    this.Initialize = function () {
+        this.name = initialArguments._name;
+        //
+        this.world = [];
+        for (var i = 0; i < initialArguments._world.length; i++) { this.world.push(initialArguments._world[i].Copy()); }
+        //
+        this.sprites = [];
+        for (var i = 0; i < initialArguments._sprites.length; i++) { this.sprites.push(initialArguments._sprites[i].Copy()); }
+        //
+        this.playerStartPosition = initialArguments._playerStart.Copy();
+        this.exit = initialArguments._exit.Copy();
+        //console.log(this.initialArguments);
         player.transform.position.x = this.playerStartPosition.x*64;
         player.transform.position.y = this.playerStartPosition.y*64;
     };
-    this.IsRectOverWorld = function( rect , ignoreField ) {
+    //
+    this.IsRectOverWorld = function (rect, ignoreField, isRectCollider) {
         var result = false;
         for (var i = 0; i < this.world.length;i++) {
             var f = this.world[i];
-            if (f.image.isCollider && f!==ignoreField) {
-                if (IntersectionRects(f.GetRect(), rect)) {
-                    result = true;
-                    break;
+            if (f.image.isCollider ){
+                if (f !== ignoreField) {
+                    if (IntersectionRects(f.GetRect(), rect)) {
+                        if (isRectCollider === true) {
+                            if (typeof f.OnCollision === "function") { f.OnCollision(f); }
+                        }
+                        result = true;
+                        break;
+                    }
+                }
+            }
+            else {
+                if (isRectCollider === true) {
+                    if (IntersectionRects(f.GetRect(), rect)) {
+                        if (typeof f.OnTrigger === "function") { f.OnTrigger(f); }
+                    }
                 }
             }
         }
         return result;
     };
-    this.IsRectOverDestination = function (rect) {
+    //
+    this.IsRectOverExit = function (rect) {
         var result = false;
-        for (var i = 0; i < this.destinations.length; i++) {
-            var d = this.destinations[i];
+        for (var i = 0; i < this.exit.length; i++) {
+            var d = this.exit[i];
             if (IntersectionRects(d.GetRect(), rect)) {
                 result = true;
                 break;
@@ -156,35 +202,59 @@ function Level(name,world, sprites, playerStart, destinations) {
         }
         return result;
     };
+    //
 }
 
 // FIELD //
-function Field(x, y, rotation, image, isMovable, isDestructible) {
+function Field(x, y, rotation, image, isMovable, isDestructible, OnCollision, OnTrigger) {
+    //
     this.transform = new Transform( new Vector2(x*64,y*64) , rotation );
+    //
     this.image = image;
+    //
     this.IsMouseOver = function () {
         return this.image.IsMouseOver( this.transform.position.x , this.transform.position.y );
     };
+    //
     this.ContainsPoint = function( vec2Point ){
         return IntersectionRectPoint(new Rect(this.transform.position.x + 1, this.transform.position.y + 1, this.image.width - 2, this.image.height - 2), vec2Point);
     };
+    //
     this.GetRect = function () { return new Rect(this.transform.position.x + 1, this.transform.position.y + 1, 62, 62); };
-    this.isMovable = isMovable; if (isMovable !== false && isMovable !== true) { this.isMovable = false; }
+    //
+    this.isMovable = isMovable;
+    if (isMovable !== false && isMovable !== true) { this.isMovable = false; }
+    //
     this.direction = Direction.none;
+    //
     this.DirectionVector = function () {
         return Direction.toVector(this.direction);
     };
+    //
     this.DirectionToCoursor = function () {
         return new Vector2(mouse.x, mouse.y).Subtract(new Vector2(this.transform.position.x + 32, this.transform.position.y + 32));
     };
+    //
     this.Draw = function () {
         this.image.DrawRotated(this.transform.position.x, this.transform.position.y, this.transform.rotation);
     }
+    //
     this.InPlayersReach = function () {
         if (new Vector2(player.transform.position.x - this.transform.position.x, player.transform.position.y - this.transform.position.y).SqrMagnitude() <= 5000) { return true; }
         else { return false; }
     }
-    this.isDestructible = isDestructible; if (isDestructible !== false && isDestructible !== true) { this.isDestructible = false; }
+    //
+    this.isDestructible = isDestructible;
+    if (isDestructible !== false && isDestructible !== true) { this.isDestructible = false; }
+    //
+    this.OnCollision = OnCollision;
+    //
+    this.OnTrigger = OnTrigger;
+    //
+    this.Copy = function () {
+        return new Field(x, y, rotation, image, isMovable, isDestructible, OnCollision, OnTrigger);
+    };
+    //
 };
 
 var Direction = { none:0 , right:1 , left:2 , up:3 , down:4 };
@@ -197,25 +267,43 @@ Direction.toVector = function( dir ){
 };
 
 // PLAYER //
-function Player ( x , y ) {
-    this.transform = new Transform(new Vector2(x*64,y*64),0);
+function Player(x, y) {
+    //
+    this.transform = new Transform(new Vector2(x * 64, y * 64), 0);
+    //
     this.isSelected = false;
+    //
     this.direction = Direction.none;
-    this.DirectionVector = function(){
+    //
+    this.inventory = [];
+    //
+    this.DirectionVector = function () {
         return Direction.toVector(this.direction);
     };
-    this.IsMouseOver = function(){ return IsMouseOver( this.transform.position.x , this.transform.position.y , 64 , 64 ); };
+    //
+    this.IsMouseOver = function () {
+        return IsMouseOver(this.transform.position.x, this.transform.position.y, 64, 64);
+    };
+    //
     this.DirectionToCoursor = function() {
         return new Vector2(mouse.x,mouse.y).Subtract( new Vector2( player.transform.position.x+32 , player.transform.position.y+32 ) );
     };
-    this.GetCenter = function(){ return new Vector2( this.transform.position.x+32 , this.transform.position.y+32 ); };
-    this.GetRect = function(){ return new Rect( this.transform.position.x+1 , this.transform.position.y+1 , 62 , 62 ); };
+    //
+    this.GetCenter = function () {
+        return new Vector2(this.transform.position.x + 32, this.transform.position.y + 32);
+    };
+    //
+    this.GetRect = function () {
+        return new Rect(this.transform.position.x + 1, this.transform.position.y + 1, 62, 62);
+    };
+    //
 }
 
-// PLAYER DESTINATION FIELD //
-function PlayerDestination ( x , y ) {
+// PLAYER EXIT //
+function PlayerExit ( x , y ) {
     this.transform = new Transform(new Vector2(x * 64, y * 64), 0);
     this.GetRect = function () { return new Rect(this.transform.position.x + 1, this.transform.position.y + 1, 62, 62); };
+    this.Copy = function () { return new PlayerExit(x,y); }
 }
 
 // SPRITE //
@@ -235,6 +323,11 @@ function Sprite ( image , x , y , rotation , scale ) {
         var computedHeight = this.image.height * this.transform.scale.y;
         return IsMouseOver(this.transform.position.x - computedWidth/2, this.transform.position.y - computedHeight / 2, computedWidth, computedHeight);
     }
+    //
+    this.Copy = function () {
+        return new Sprite(image, x, y, rotation, scale);
+    };
+    //
 }
 
 // EXTENSION METHODS /////////////////////////////////////////////
@@ -487,7 +580,17 @@ images.blockedPathWood1 = new Image();
 images.blockedPathWood1.src = 'mpibp_data/images/blocked-path-wood-1.gif';
 images.blockedPathWood1.isCollider = true;
 
+// ACTIONS ///////////////////////////////////////////////
 
+function actionOnItemKeyCollected() {
+    player.inventory.push(images.itemKey); this.transform.position.y = 1000;
+};
+
+function actionOnDoorOpen() {
+    if (player.inventory.indexOf(images.itemKey) !== -1) {
+        this.transform.position.y = 1000;
+    }
+};
 
 // MAPS ///////////////////////////////////////////////
 
@@ -499,7 +602,7 @@ var levels = [
         new Field(0, 3, 90, images.wall1L), new Field(1, 3, 0, images.wall1I), new Field(2, 3, 0, images.wall1I), new Field(3, 3, 0, images.wall1I), new Field(4, 3, 0, images.wall1L)
         ],[
             new Sprite(images.tree1, 160, 40, 0, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 270, 22, 44, new Vector2(0.5, 0.5)), new Sprite(images.tree1, 170, 332, 344, new Vector2(0.45, 0.45)), new Sprite(images.tree1, 264, 352, 310, new Vector2(0.55, 0.55)), new Sprite(images.tree1, 370, 292, 344, new Vector2(0.7, 0.7)), new Sprite(images.tree1, 370, 92, 11, new Vector2(0.7, 0.7))
-        ], new Vector2(1,2) ,[ new PlayerDestination(3,2) ] ),
+        ], new Vector2(1,2) , new PlayerExit(3,2) ),
 
     new Level("Go right. Clear obstacle. Go down, right to complete.", [
         new Field(0,0,180,images.wall1L),new Field(1,0,180,images.wall1I),new Field(2,0,180,images.wall1I),new Field(3,0,270,images.wall1L),
@@ -512,20 +615,20 @@ var levels = [
         new Field(2, 2, 0, images.blockedPathWood1 ,false,true)
     ],[
         new Sprite(images.entrance, 96, 32, 0, new Vector2(1, 1))
-    ], new Vector2(1, 1), [new PlayerDestination(3, 4)]),
+    ], new Vector2(1, 1), new PlayerExit(3, 4)),
 
     new Level("Use movable object to complete.", [
         new Field(0, 0, 180, images.wall1L), new Field(1, 0, 180, images.wall1I), new Field(2, 0, 180, images.wall1I), new Field(3, 0, 180, images.wall1I), new Field(4, 0, 270, images.wall1L),
-        new Field(0, 1, 90, images.wall1I), new Field(2, 1, 0, images.pathEnd), new Field(3, 1, 0, images.pathL), new Field(4, 1, 270, images.wall1I),
+        new Field(0, 1, 90, images.wall1I), new Field(1, 1, 0, images.pathEnd), new Field(2, 1, 0, images.pathI), new Field(3, 1, 0, images.pathL), new Field(4, 1, 270, images.wall1I),
         new Field(0, 2, 90, images.wall1L),new Field(3,2,90,images.pathI), new Field(1, 2, 0, images.wall1I), new Field(2, 2, 270, images.wall1L2), new Field(4, 2, 270, images.wall1I),
         new Field(0, 3, 0, images.pathEnd), new Field(1, 3, 0, images.pathL), new Field(2, 3, 90, images.wall1I), new Field(3, 3, 90, images.pathI), new Field(4, 3, 270, images.wall1I),
         new Field(1, 4, 270, images.pathEnd),new Field(2, 4, 90, images.wall1End), new Field(3, 4, 180, images.pathT), new Field(4, 4, 0, images.pathI), new Field(4, 4, 90, images.wall1End2),
         new Field(3, 5, 270, images.pathEnd),new Field(4, 5, 270, images.wall1End),
 
-        new Field(0, 4, 0, images.woodenBarrel1, false,true),new Field(0, 5, 0, images.woodenBarrel1, false,true), new Field(1, 3, 0, images.woodenBox1, true)
+        new Field(0, 4, 0, images.woodenBarrel1, false, true), new Field(0, 5, 0, images.woodenBarrel1, false, true), new Field(1, 3, 0, images.woodenBox1, true)
     ],[
         
-    ], new Vector2(4, 4), [new PlayerDestination(1, 1)] ),
+    ], new Vector2(4, 4), new PlayerExit(1, 1)),
 
     new Level("Find a way in.", [
         new Field(2, 2, 180, images.wall1L2),new Field(4, 2, 0, images.wall1I),new Field(3, 2, 0, images.wall1I),
@@ -536,15 +639,17 @@ var levels = [
         new Field(1, 4, 0, images.woodenBarrel1, false, true), new Field(0, 2, 0, images.woodenBarrel1, false, true), new Field(2, 0, 0, images.woodenBarrel1, false, true), new Field(3, 1, 0, images.woodenBarrel1, false, true), new Field(4, 0, 0, images.woodenBarrel1, false, true), new Field(4, 1, 0, images.woodenBox1, true), new Field(3, 0, 0, images.woodenBox1, true), new Field(2, 1, 0, images.woodenBox1, true), new Field(2, 3, 90, images.blockedPathWood1, false, true), new Field(3, 4, 0, images.blockedPathWood1, false, true)
 ],[
     
-], new Vector2(1, 5), [new PlayerDestination(3, 5)]),
+], new Vector2(1, 5), new PlayerExit(3, 5)),
     
     new Level("Find a way out.", [
-        new Field(2, 2, 180, images.wall1I),
+        new Field(0, 0, 0, images.wall1L2), new Field(4, 0, 90, images.wall1L2),
+        new Field(0, 3, 270, images.wall1End2), new Field(4, 3, 270, images.wall1End),
+        new Field(0, 4, 90, images.wall1L), new Field(1, 4, 0, images.wall1I), new Field(2, 4, 0, images.wall1Gap), new Field(3, 4, 0, images.wall1I), new Field(4, 4, 0, images.wall1L),
 
-        //new Field(1, 4, 0, images.woodenBarrel1, false, true), new Field(0, 2, 0, images.woodenBarrel1, false, true), new Field(2, 0, 0, images.woodenBarrel1, false, true), new Field(3, 1, 0, images.woodenBarrel1, false, true), new Field(4, 0, 0, images.woodenBarrel1, false, true), new Field(4, 1, 0, images.woodenBox1, true), new Field(3, 0, 0, images.woodenBox1, true), new Field(2, 1, 0, images.woodenBox1, true), new Field(2, 3, 90, images.blockedPathWood1, false, true), new Field(3, 4, 0, images.blockedPathWood1, false, true)
+        new Field(2, 0, 0, images.itemKey, false, false, undefined, actionOnItemKeyCollected), new Field(2, 4, 0, images.woodenBarrel1, false, true), new Field(1, 2, 0, images.woodenBox1, true), new Field(3, 5, 0, images.doorInaccessible, false, false, actionOnDoorOpen),
     ], [
 
-    ], new Vector2(1, 5), [new PlayerDestination(3, 5)])
+    ], new Vector2(0, 1), new PlayerExit(4, 5))
 
 ];
 
@@ -590,8 +695,8 @@ var Update = function () {
     images.background.Draw( 0 , 0 );
 
     //draw exit:
-    for( var i = 0 ; i < CurrentLevel().destinations.length ; i++ ) {
-        var d = CurrentLevel().destinations[i];
+    {
+        var d = CurrentLevel().exit;
         if( images.stairs.IsMouseOver(d.transform.position.x,d.transform.position.y)===true ){
             images.stairs_onmouseover.Draw( d.transform.position.x , d.transform.position.y );
         }
@@ -677,7 +782,7 @@ var Update = function () {
                     images.playerStepsStop.DrawRotated(player.transform.position.x + 64 * i * dir.x - 12 * dir.x, player.transform.position.y + 64 * i * dir.y - 12 * dir.y, images.playerSteps.rotation);
                     break;
                 }
-                else if ( CurrentLevel().IsRectOverDestination(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64)) ) {
+                else if ( CurrentLevel().IsRectOverExit(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64)) ) {
                     /* exit detected */
                     images.playerStepsStop.DrawRotated(player.transform.position.x + 64 * i * dir.x + 52 * dir.x, player.transform.position.y + 64 * i * dir.y + 52 * dir.y, images.playerSteps.rotation);
                     break;
@@ -728,7 +833,7 @@ var Update = function () {
     //player move translations:
     if (player.direction !== Direction.none) {
         //test world collisions:
-        if( CurrentLevel().IsRectOverWorld( player.GetRect() ) ){
+        if( CurrentLevel().IsRectOverWorld( player.GetRect(),undefined,true ) ){
             if (player.transform.position.x % 64 !== 0) { player.transform.position.x -= 4 * player.DirectionVector().x; }
             if (player.transform.position.y % 64 !== 0) { player.transform.position.y -= 4 * player.DirectionVector().y; }
             player.direction = Direction.none;
@@ -764,18 +869,15 @@ var Update = function () {
     
     //evaluate if exit was reched:
     if (CurrentLevel().isLevelCompleted === false) {
-        for (var i = 0; i < CurrentLevel().destinations.length; i++) {
-            if (IntersectionRectPoint(new Rect(CurrentLevel().destinations[i].transform.position.x, CurrentLevel().destinations[i].transform.position.y, 64, 64), player.GetCenter())) {
-                CurrentLevel().isLevelCompleted = true;
-                player.direction = Direction.none;
-                setTimeout(function () {
-                    if (levelIndex < levels.length - 1) {
-                        levelIndex++;
-                        CurrentLevel().Initialize();
-                    }
-                }, 300);
-                break;
-            }
+        if (IntersectionRectPoint(new Rect(CurrentLevel().exit.transform.position.x, CurrentLevel().exit.transform.position.y, 64, 64), player.GetCenter())) {
+            CurrentLevel().isLevelCompleted = true;
+            player.direction = Direction.none;
+            setTimeout(function () {
+                if (levelIndex < levels.length - 1) {
+                    levelIndex++;
+                    CurrentLevel().Initialize();
+                }
+            }, 300);
         }
     }
 
@@ -785,6 +887,11 @@ var Update = function () {
     //draw restart button:
     if (images.buttonRestart.rect.IsMouseOver()) { images.buttonRestartMouseOver.Draw(images.buttonRestart.rect.x, images.buttonRestart.rect.y); }
     else { images.buttonRestart.Draw(images.buttonRestart.rect.x, images.buttonRestart.rect.y); }
+
+    //draw inventory:
+    for (var i = 0; i < player.inventory.length; i++) {
+        player.inventory[i].Draw(10+i*32,360);
+    }
 
 };
 
@@ -810,7 +917,9 @@ var OnMouseDown = function ( e ) {
     }
     // test restart button:
     if ( images.buttonRestart.rect.IsMouseOver() ) {
-        console.log("restart");
+        player.direction = Direction.none;
+        player.inventory = [];
+        CurrentLevel().Initialize();
     }
 };
 
@@ -867,6 +976,7 @@ var OnMouseUp = function (e) {
             selectedField = null;
         }
     }
+
 };
 
 // ON MOUSE MOVE /////////////////////////////////////////////
