@@ -1,2 +1,2 @@
-# html5-js-game-mpibp
-html5 js game_ mpib:p
+# game sketch in html5/js
+codename "my path is broken"
