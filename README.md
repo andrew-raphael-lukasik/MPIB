@@ -1,2 +1,2 @@
-# game sketch in html5/js
-codename "my path is broken"
+# game sketch in html5/js:
+# http://andrew-raphael-lukasik.github.io/MPIB/
