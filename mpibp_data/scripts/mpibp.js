@@ -30,13 +30,13 @@ Vector2.prototype.Divide = function (vector) {
     return new Vector2(this.x / vector.x, this.y / vector.y);
 };
 Vector2.prototype.distance = function (vector) {
-    var deltaX = this.x - vector.x;
-    var deltaY = this.y - vector.y;
+    let deltaX = this.x - vector.x;
+    let deltaY = this.y - vector.y;
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 Vector2.prototype.distanceSqr = function (vector) {
-    var deltaX = this.x - vector.x;
-    var deltaY = this.y - vector.y;
+    let deltaX = this.x - vector.x;
+    let deltaY = this.y - vector.y;
     return (deltaX * deltaX + deltaY * deltaY);
 };
 Vector2.prototype.Magnitude = function () {
@@ -46,7 +46,7 @@ Vector2.prototype.SqrMagnitude = function () {
     return this.x * this.x + this.y * this.y;
 };
 Vector2.prototype.normalize = function () {
-    var mag = Math.sqrt(this.x * this.x + this.y * this.y);
+    let mag = Math.sqrt(this.x * this.x + this.y * this.y);
     if (mag === 0) {
         this.x = 0;
         this.y = 0;
@@ -56,14 +56,14 @@ Vector2.prototype.normalize = function () {
     }
 };
 Vector2.prototype.getNormalized = function () {
-    var mag = Math.sqrt(this.x * this.x + this.y * this.y);
+    let mag = Math.sqrt(this.x * this.x + this.y * this.y);
     return new Vector2(this.x / mag, this.y / mag);
 };
 Vector2.prototype.getAngle = function () {
     return Math.atan2(this.y, this.x) * 180 / Math.PI;
 };
 Vector2.prototype.degToVec = function (deg) {
-    var rad = deg * DEGRAD;
+    let rad = deg * DEGRAD;
     return new Vector2(Math.cos(rad), Math.sin(rad));
 };
 Vector2.prototype.radToVec = function (rad) {
@@ -73,9 +73,9 @@ Vector2.prototype.dot = function (vector) {
     return (this.x * vector.x + this.y * vector.y);
 };
 Vector2.prototype.rotate = function (deg) {
-    var rad = deg * DEGRAD;
-    var cos = Math.cos(rad);
-    var sin = Math.sin(rad);
+    let rad = deg * DEGRAD;
+    let cos = Math.cos(rad);
+    let sin = Math.sin(rad);
     this.x = this.x * cos - this.y * sin;
     this.y = this.y * cos + this.x * sin;
 };
@@ -121,8 +121,9 @@ function Transform ( position , rotation ) {
 }
 
 // LEVEL //
-function Level(name, world, sprites, playerStart, exit) {
-    var initialArguments = {
+function Level ( name , world , sprites , playerStart , exit )
+{
+    let initialArguments = {
         _name: undefined,
         _world: undefined,
         _sprites: undefined,
@@ -131,9 +132,9 @@ function Level(name, world, sprites, playerStart, exit) {
     };
     initialArguments._name = name;
     initialArguments._world = [];
-    for (var i = 0; i < world.length; i++) { initialArguments._world.push(world[i].Copy()); }
+    for (let i = 0; i < world.length; i++) { initialArguments._world.push(world[i].Copy()); }
     initialArguments._sprites = [];
-    for (var i = 0; i < sprites.length; i++) { initialArguments._sprites.push(sprites[i].Copy()); }
+    for (let i = 0; i < sprites.length; i++) { initialArguments._sprites.push(sprites[i].Copy()); }
     initialArguments._exit = exit.Copy();
     initialArguments._playerStart = playerStart.Copy();
     //
@@ -153,10 +154,10 @@ function Level(name, world, sprites, playerStart, exit) {
         this.name = initialArguments._name;
         //
         this.world = [];
-        for (var i = 0; i < initialArguments._world.length; i++) { this.world.push(initialArguments._world[i].Copy()); }
+        for (let i = 0; i < initialArguments._world.length; i++) { this.world.push(initialArguments._world[i].Copy()); }
         //
         this.sprites = [];
-        for (var i = 0; i < initialArguments._sprites.length; i++) { this.sprites.push(initialArguments._sprites[i].Copy()); }
+        for (let i = 0; i < initialArguments._sprites.length; i++) { this.sprites.push(initialArguments._sprites[i].Copy()); }
         //
         this.playerStartPosition = initialArguments._playerStart.Copy();
         this.exit = initialArguments._exit.Copy();
@@ -166,9 +167,9 @@ function Level(name, world, sprites, playerStart, exit) {
     };
     //
     this.IsRectOverWorld = function (rect, ignoreField, isRectCollider) {
-        var result = false;
-        for (var i = 0; i < this.world.length;i++) {
-            var f = this.world[i];
+        let result = false;
+        for (let i = 0; i < this.world.length;i++) {
+            let f = this.world[i];
             if (f.image.isCollider ){
                 if (f !== ignoreField) {
                     if (IntersectionRects(f.GetRect(), rect)) {
@@ -192,9 +193,9 @@ function Level(name, world, sprites, playerStart, exit) {
     };
     //
     this.IsRectOverExit = function (rect) {
-        var result = false;
-        for (var i = 0; i < this.exit.length; i++) {
-            var d = this.exit[i];
+        let result = false;
+        for( let i = 0; i < this.exit.length; i++ ) {
+            let d = this.exit[i];
             if (IntersectionRects(d.GetRect(), rect)) {
                 result = true;
                 break;
@@ -319,8 +320,8 @@ function Sprite ( image , x , y , rotation , scale ) {
     this.transform.scale = scale;
     //
     this.IsMouseOver = function () {
-        var computedWidth = this.image.width * this.transform.scale.x;
-        var computedHeight = this.image.height * this.transform.scale.y;
+        let computedWidth = this.image.width * this.transform.scale.x;
+        let computedHeight = this.image.height * this.transform.scale.y;
         return IsMouseOver(this.transform.position.x - computedWidth/2, this.transform.position.y - computedHeight / 2, computedWidth, computedHeight);
     }
     //
@@ -375,17 +376,17 @@ IntersectionRects = function ( rect1 , rect2 ) {
 };
 
 IntersectionCircles = function ( circle1 , circle2 ) {
-    var dx = circle1.x - circle2.x;
-    var dy = circle1.y - circle2.y;
-    var dist = Math.sqrt(dx * dx + dy * dy); 
+    let dx = circle1.x - circle2.x;
+    let dy = circle1.y - circle2.y;
+    let dist = Math.sqrt(dx * dx + dy * dy); 
     if( dist<circle1.r+circle2.r ){ return true; }
     else{ return false; }
 };
 
 IntersectionCirclePoint = function ( circle1 , point ) {
-    var dx = circle1.x - point.x;
-    var dy = circle1.y - point.y;
-    var dist = Math.sqrt(dx * dx + dy * dy);
+    let dx = circle1.x - point.x;
+    let dy = circle1.y - point.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < circle1.r) { return true; }
     else { return false; }
 };
@@ -399,7 +400,7 @@ IsMouseOver = function ( x , y , w , h ) {
 };
 
 Normalize = function ( v ) {//if( v instanceof Vector2 ){}
-    var dist = Math.Sqrt( v.x * v.x + v.y * v.y );
+    let dist = Math.Sqrt( v.x * v.x + v.y * v.y );
     return new Vector2( v.x/dist , v.y/dist );
 };
 
@@ -696,7 +697,7 @@ var Update = function () {
 
     //draw exit:
     {
-        var d = CurrentLevel().exit;
+        let d = CurrentLevel().exit;
         if( images.stairs.IsMouseOver(d.transform.position.x,d.transform.position.y)===true ){
             images.stairs_onmouseover.Draw( d.transform.position.x , d.transform.position.y );
         }
@@ -707,8 +708,8 @@ var Update = function () {
 
     //DRAW MAP'S FIELDS:
     {
-        for (var i = 0; i < CurrentLevel().world.length ; i++) {
-            var f = CurrentLevel().world[i];
+        for( let i = 0; i < CurrentLevel().world.length ; i++ ) {
+            let f = CurrentLevel().world[i];
             if (f instanceof Field) {
                 //draw:
                 if (f.image instanceof Image) { f.Draw(); }
@@ -752,16 +753,16 @@ var Update = function () {
     }
 
     //draw sprites:
-    for( var i = 0 ; i < CurrentLevel().sprites.length ; i++ ) {
+    for( let i = 0 ; i < CurrentLevel().sprites.length ; i++ ) {
         CurrentLevel().sprites[i].Draw();
     }
     
     //visualise player moving direction:
     if (mouse.down && player.isSelected) {
-        var dirRaw = player.DirectionToCoursor();
+        let dirRaw = player.DirectionToCoursor();
         if (dirRaw.Magnitude() > 22) {
             //determine move direction:
-            var dir = new Vector2(0, 0);
+            let dir = new Vector2(0, 0);
             if (Math.abs(dirRaw.x) >= Math.abs(dirRaw.y)) {
                 if (dirRaw.x >= 0) { dir.x = 1; images.playerSteps.rotation = 0; images.player.rotationTarget = 270; }
                 else { dir.x = -1; images.playerSteps.rotation = 180; images.player.rotationTarget = 90; }
@@ -771,7 +772,7 @@ var Update = function () {
                 else { dir.y = -1; images.playerSteps.rotation = 270; images.player.rotationTarget = 180; }
             }
             //draw steps:
-            for (var i = 1 ; i < 6 ; i++) {
+            for( let i = 1 ; i < 6 ; i++ ) {
                 if (CurrentLevel().IsRectOverWorld(new Rect(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, 64, 64))) {
                     /* world collision detected */
                     images.playerStepsStop.DrawRotated(player.transform.position.x + 64 * i * dir.x, player.transform.position.y + 64 * i * dir.y, images.playerSteps.rotation);
@@ -796,11 +797,11 @@ var Update = function () {
     }
 
     //visualize movable object moving direction:
-    if (mouse.down && selectedField instanceof Field) {
-        var dirRaw = selectedField.DirectionToCoursor();
+    if( mouse.down && selectedField instanceof Field ) {
+        let dirRaw = selectedField.DirectionToCoursor();
         if (dirRaw.Magnitude() > 22) {
             //determine move direction:
-            var dir = new Vector2(0, 0);
+            let dir = new Vector2(0, 0);
             if (Math.abs(dirRaw.x) >= Math.abs(dirRaw.y)) {
                 if (dirRaw.x >= 0) { dir.x = 1; images.objectSteps.rotation = 0; images.player.rotationTarget = 270; }
                 else { dir.x = -1; images.objectSteps.rotation = 180; images.player.rotationTarget = 90; }
@@ -810,7 +811,7 @@ var Update = function () {
                 else { dir.y = -1; images.objectSteps.rotation = 270; images.player.rotationTarget = 180; }
             }
             //draw steps:
-            for (var i = 1 ; i < 6 ; i++) {
+            for( let i = 1 ; i < 6 ; i++ ) {
                 fRect = selectedField.GetRect();
                 if (IntersectionRects(new Rect(fRect.x + 64 * i * dir.x, fRect.y + 64 * i * dir.y, 64, 64), player.GetRect()) || CurrentLevel().IsRectOverWorld(new Rect(selectedField.transform.position.x + 64 * i * dir.x, selectedField.transform.position.y + 64 * i * dir.y, 64, 64))) {
                     /* world collision detected */
@@ -851,7 +852,7 @@ var Update = function () {
     
     //rotate player:
     {
-        var playerRotationStepThisFrame = Math.ModNearestInt(images.player.rotationTarget - images.player.rotation, 360.0) / 6;
+        let playerRotationStepThisFrame = Math.ModNearestInt(images.player.rotationTarget - images.player.rotation, 360.0) / 6;
         if (player.isSelected) { playerRotationStepThisFrame /= 4; }
         images.player.rotation += playerRotationStepThisFrame;
     }
@@ -889,7 +890,7 @@ var Update = function () {
     else { images.buttonRestart.Draw(images.buttonRestart.rect.x, images.buttonRestart.rect.y); }
 
     //draw inventory:
-    for (var i = 0; i < player.inventory.length; i++) {
+    for (let i = 0; i < player.inventory.length; i++) {
         player.inventory[i].Draw(10+i*32,360);
     }
 
@@ -904,8 +905,8 @@ var OnMouseDown = function ( e ) {
         player.isSelected = true;
     }
     //test player inveractions:
-    for (var i = 0; i < CurrentLevel().world.length; i++) {
-        var f = CurrentLevel().world[i];
+    for( let i = 0; i < CurrentLevel().world.length; i++ ) {
+        let f = CurrentLevel().world[i];
         if ((f.isMovable || f.isDestructible) && f.IsMouseOver() && f.InPlayersReach() && player.direction === Direction.none) {
             if (f.isDestructible) {
                 f.image = images.destroyedWoodenStuff1;
@@ -933,7 +934,7 @@ var OnMouseUp = function (e) {
     
     //test player inveractions
     if( player.isSelected ) {
-        var dir = player.DirectionToCoursor();
+        let dir = player.DirectionToCoursor();
         if( dir.Magnitude()>22 ){
             if( Math.abs(dir.x)>Math.abs(dir.y) ) {
                 if( dir.x>0 ){
@@ -963,7 +964,7 @@ var OnMouseUp = function (e) {
 
     //object interactions:
     if (selectedField instanceof Field) {
-        var dir = selectedField.DirectionToCoursor();
+        let dir = selectedField.DirectionToCoursor();
         if (dir.Magnitude() > 22) {
             if (Math.abs(dir.x) > Math.abs(dir.y)) {
                 if (dir.x > 0) { selectedField.direction = Direction.right; }
@@ -984,7 +985,7 @@ var OnMouseUp = function (e) {
 var OnMouseMove = function (e) {
     mouse.over = true;
     //
-    var rect = canvas.getBoundingClientRect();
+    let rect = canvas.getBoundingClientRect();
     mouse.x = e.clientX-rect.left;
     mouse.y = e.clientY-rect.top;
     //
